@@ -1,0 +1,15 @@
+.contentWrapper {
+  padding: 18px;
+
+  li {
+    margin-left: 18px;
+  }
+}
+
+.titleWrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 10px;
+}
