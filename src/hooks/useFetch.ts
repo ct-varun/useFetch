@@ -1,6 +1,6 @@
 import type { AxiosRequestConfig } from "axios";
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type props = {
   url: string;
@@ -22,6 +22,7 @@ export function useFetch({
   const [data, setData] = useState<any>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  const controllerRef = useRef(null);
 
   const api = axios.create();
 
@@ -36,11 +37,16 @@ export function useFetch({
   );
 
   const fetchData = async () => {
+    if (controllerRef.current) {
+      controllerRef.current.abort();
+    }
+    controllerRef.current = new AbortController();
     try {
       setIsLoading(true);
       setError("");
       const response = await api.get(url, {
         ...axiosOptions,
+        signal: controllerRef.current.signal,
       });
       setData(response?.data?.todos);
 
@@ -49,7 +55,7 @@ export function useFetch({
       if (error?.response?.data?.message) {
         setError(error?.response?.data?.message);
       } else {
-        setError(error.message);
+        setError(error?.message || "something went wrong");
       }
       onError?.();
     } finally {
@@ -57,11 +63,17 @@ export function useFetch({
     }
   };
 
+  const handleCancel = () => {
+    controllerRef.current?.abort();
+  };
+
   useEffect(() => {
     if (isAutoFetch) {
       fetchData();
     }
+
+    return () => controllerRef.current?.abort();
   }, [isAutoFetch]);
 
-  return { data, isLoading, error, refetch: fetchData };
+  return { data, isLoading, error, refetch: fetchData, cancel: handleCancel };
 }
