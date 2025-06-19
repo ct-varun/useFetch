@@ -24,6 +24,7 @@ function DisplayTodos() {
     onError: () => {
       console.log("on error");
     },
+    retryCount: 1,
   });
 
   return (

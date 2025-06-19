@@ -12,6 +12,9 @@ type Props = {
   onSuccess?: () => void;
   onError?: () => void;
   loaderCloseDelay?: number;
+  pollDelay?: number;
+  retryCount?: number;
+  retryDelay?: number;
 };
 
 export function useFetch({
@@ -22,6 +25,9 @@ export function useFetch({
   onSuccess,
   onError,
   loaderCloseDelay = 200,
+  pollDelay = 0,
+  retryCount = 0,
+  retryDelay = 0,
 }: Props) {
   const [data, setData] = useState<any>([]);
   const [isLoading, setIsLoading] = useState<boolean>(
@@ -30,11 +36,15 @@ export function useFetch({
   const [error, setError] = useState<string>("");
   const debouncedIsLoading = useDebounce(isLoading, loaderCloseDelay);
   const controllerRef = useRef(null);
+  const timeoutRef = useRef(null);
+  const retryCounterRef = useRef(0);
+  const retryTimeoutRef = useRef(null);
 
   const fetchData = async () => {
-    if (controllerRef.current) {
-      controllerRef.current.abort();
-    }
+    clearPoll();
+    clearRetry();
+    clearAbort();
+
     controllerRef.current = new AbortController();
     try {
       setIsLoading(true);
@@ -51,6 +61,12 @@ export function useFetch({
       }
 
       onSuccess?.();
+
+      if (pollDelay > 0) {
+        timeoutRef.current = setTimeout(fetchData, pollDelay);
+      }
+
+      retryCounterRef.current = 0;
     } catch (error: any) {
       if (error?.response?.data?.message) {
         setError(error?.response?.data?.message);
@@ -58,6 +74,13 @@ export function useFetch({
         setError(error?.message || "something went wrong");
       }
       onError?.();
+      if (
+        error?.code !== "ERR_CANCELED" &&
+        retryCount - retryCounterRef.current > 0
+      ) {
+        retryTimeoutRef.current = setTimeout(fetchData, retryDelay);
+        retryCounterRef.current += 1;
+      }
     } finally {
       setIsLoading(false);
     }
@@ -67,19 +90,44 @@ export function useFetch({
     controllerRef.current?.abort();
   };
 
+  const clearPoll = () => {
+    if (retryTimeoutRef.current) {
+      clearInterval(retryTimeoutRef.current);
+    }
+  };
+
+  const clearRetry = () => {
+    if (retryTimeoutRef.current) {
+      clearInterval(retryTimeoutRef.current);
+    }
+  };
+
+  const clearAbort = () => {
+    if (controllerRef.current) {
+      controllerRef.current?.abort();
+    }
+  };
+
   useEffect(() => {
     if (isAutoFetch) {
       fetchData();
     }
 
-    return () => controllerRef.current?.abort();
+    return () => {
+      clearAbort();
+      clearPoll();
+      clearRetry();
+    };
   }, [isAutoFetch]);
 
   return {
     data,
     isLoading: debouncedIsLoading,
     error,
-    refetch: fetchData,
+    refetch: () => {
+      retryCounterRef.current = 0;
+      fetchData();
+    },
     cancel: handleCancel,
   };
 }
