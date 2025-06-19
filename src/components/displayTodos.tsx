@@ -2,7 +2,7 @@ import { useFetch } from "../hooks/useFetch";
 import styles from "./styles.module.css";
 
 function DisplayTodos() {
-  const { data, isLoading, error, refetch } = useFetch({
+  const { data, isLoading, error, refetch, cancel } = useFetch({
     url: "https://dummyjson.com/todos",
     isAutoFetch: true,
     axiosOptions: {
@@ -28,6 +28,7 @@ function DisplayTodos() {
     },
   });
 
+
   return (
     <div className={styles.contentWrapper}>
       <div className={styles.titleWrapper}>
@@ -36,7 +37,9 @@ function DisplayTodos() {
           fetch
         </button>
       </div>
-
+      <button onClick={cancel} disabled={!isLoading}>
+        cancel
+      </button>
       {isLoading ? (
         <div>loading...</div>
       ) : (
