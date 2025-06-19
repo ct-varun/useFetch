@@ -20,8 +20,11 @@ export function useFetch({
   onError,
 }: props) {
   const [data, setData] = useState<any>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(
+    isAutoFetch ? true : false
+  );
   const [error, setError] = useState<string>("");
+  const [debouncedLoader, setDebouncedLoader] = useState<boolean>(false);
   const controllerRef = useRef(null);
 
   const api = axios.create();
