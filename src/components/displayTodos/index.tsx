@@ -24,7 +24,7 @@ function DisplayTodos() {
     onError: () => {
       console.log("on error");
     },
-    pollDelay: 2000,
+    retryCount: 1,
   });
 
   return (
