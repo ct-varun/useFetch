@@ -8,6 +8,24 @@ function DisplayTodos() {
     axiosOptions: {
       timeout: 30000,
     },
+    transformResponse: (dataResponse) => {
+      const todos = [...dataResponse.data.todos];
+      const response = todos?.map((item) => ({
+        ...item,
+        todo: item.todo + " transformed",
+      }));
+
+      return {
+        ...dataResponse,
+        data: { ...dataResponse.data, todos: response },
+      };
+    },
+    onSuccess: () => {
+      console.log("on success");
+    },
+    onError: () => {
+      console.log("on error");
+    },
   });
 
   return (
@@ -18,6 +36,7 @@ function DisplayTodos() {
           fetch
         </button>
       </div>
+
       {isLoading ? (
         <div>loading...</div>
       ) : (
