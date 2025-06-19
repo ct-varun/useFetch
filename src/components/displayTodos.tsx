@@ -28,7 +28,6 @@ function DisplayTodos() {
     },
   });
 
-
   return (
     <div className={styles.contentWrapper}>
       <div className={styles.titleWrapper}>
@@ -44,7 +43,7 @@ function DisplayTodos() {
         <div>loading...</div>
       ) : (
         <ul>
-          {data?.map((item: any) => (
+          {data?.todos?.map((item: any) => (
             <li key={item.id}>{item.todo}</li>
           ))}
         </ul>

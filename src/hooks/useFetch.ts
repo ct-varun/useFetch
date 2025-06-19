@@ -48,7 +48,7 @@ export function useFetch({
         ...axiosOptions,
         signal: controllerRef.current.signal,
       });
-      setData(response?.data?.todos);
+      setData(response?.data);
 
       onSuccess?.();
     } catch (error: any) {
