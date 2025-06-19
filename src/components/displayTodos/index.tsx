@@ -1,5 +1,5 @@
 import { useFetch } from "@/hooks/useFetch";
-import styles from "@/components/displayTodos/styles.module.css";
+import styles from "./styles.module.css";
 
 function DisplayTodos() {
   const { data, isLoading, error, refetch, cancel } = useFetch({

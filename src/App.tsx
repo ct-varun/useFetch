@@ -1,4 +1,4 @@
-import DisplayTodos from "@/components/displayTodos/displayTodos";
+import DisplayTodos from "@/components/displayTodos";
 
 import "./App.css";
 
