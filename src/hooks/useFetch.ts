@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { AxiosRequestConfig } from "axios";
 
 import { api } from "@/service/apiService";
+import { useDebounce } from "./useDebounce";
 
 type Props = {
   url: string;
@@ -10,6 +11,7 @@ type Props = {
   transformer?: (dataResponse: any) => any;
   onSuccess?: () => void;
   onError?: () => void;
+  loaderCloseDelay?: number;
 };
 
 export function useFetch({
@@ -19,13 +21,14 @@ export function useFetch({
   transformer,
   onSuccess,
   onError,
+  loaderCloseDelay = 200,
 }: Props) {
   const [data, setData] = useState<any>([]);
   const [isLoading, setIsLoading] = useState<boolean>(
     isAutoFetch ? true : false
   );
   const [error, setError] = useState<string>("");
-  const [debouncedLoader, setDebouncedLoader] = useState<boolean>(false);
+  const debouncedIsLoading = useDebounce(isLoading, loaderCloseDelay);
   const controllerRef = useRef(null);
 
   const fetchData = async () => {
@@ -74,7 +77,7 @@ export function useFetch({
 
   return {
     data,
-    isLoading,
+    isLoading: debouncedIsLoading,
     error,
     refetch: fetchData,
     cancel: handleCancel,
