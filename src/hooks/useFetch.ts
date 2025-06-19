@@ -12,6 +12,7 @@ type Props = {
   onSuccess?: () => void;
   onError?: () => void;
   loaderCloseDelay?: number;
+  pollDelay?: number;
 };
 
 export function useFetch({
@@ -22,6 +23,7 @@ export function useFetch({
   onSuccess,
   onError,
   loaderCloseDelay = 200,
+  pollDelay = 0,
 }: Props) {
   const [data, setData] = useState<any>([]);
   const [isLoading, setIsLoading] = useState<boolean>(
@@ -30,11 +32,17 @@ export function useFetch({
   const [error, setError] = useState<string>("");
   const debouncedIsLoading = useDebounce(isLoading, loaderCloseDelay);
   const controllerRef = useRef(null);
+  const timeoutRef = useRef(null);
 
   const fetchData = async () => {
-    if (controllerRef.current) {
-      controllerRef.current.abort();
+    if (timeoutRef.current) {
+      clearInterval(timeoutRef.current);
     }
+
+    if (controllerRef.current) {
+      controllerRef.current?.abort();
+    }
+
     controllerRef.current = new AbortController();
     try {
       setIsLoading(true);
@@ -51,6 +59,10 @@ export function useFetch({
       }
 
       onSuccess?.();
+
+      if (pollDelay > 0) {
+        timeoutRef.current = setTimeout(fetchData, pollDelay);
+      }
     } catch (error: any) {
       if (error?.response?.data?.message) {
         setError(error?.response?.data?.message);
