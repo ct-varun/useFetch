@@ -1,12 +1,13 @@
-import type { AxiosRequestConfig } from "axios";
-import axios from "axios";
 import { useEffect, useRef, useState } from "react";
+import type { AxiosRequestConfig } from "axios";
 
-type props = {
+import { api } from "@/service/apiService";
+
+type Props = {
   url: string;
   isAutoFetch: boolean;
   axiosOptions?: AxiosRequestConfig;
-  transformResponse: (dataResponse: any) => any;
+  transformer?: (dataResponse: any) => any;
   onSuccess?: () => void;
   onError?: () => void;
 };
@@ -15,26 +16,16 @@ export function useFetch({
   url,
   isAutoFetch = true,
   axiosOptions = {},
-  transformResponse,
+  transformer,
   onSuccess,
   onError,
-}: props) {
+}: Props) {
   const [data, setData] = useState<any>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(
+    isAutoFetch ? true : false
+  );
   const [error, setError] = useState<string>("");
   const controllerRef = useRef(null);
-
-  const api = axios.create();
-
-  api.interceptors.response.use(
-    (response: any) => {
-      const transformedData = transformResponse(response);
-      return transformedData;
-    },
-    (error) => {
-      return Promise.reject(error);
-    }
-  );
 
   const fetchData = async () => {
     if (controllerRef.current) {
@@ -48,7 +39,12 @@ export function useFetch({
         ...axiosOptions,
         signal: controllerRef.current.signal,
       });
-      setData(response?.data);
+      const transformedData = transformer?.(response);
+      if (transformedData) {
+        setData(transformedData);
+      } else {
+        setData(response?.data);
+      }
 
       onSuccess?.();
     } catch (error: any) {
@@ -75,5 +71,11 @@ export function useFetch({
     return () => controllerRef.current?.abort();
   }, [isAutoFetch]);
 
-  return { data, isLoading, error, refetch: fetchData, cancel: handleCancel };
+  return {
+    data,
+    isLoading,
+    error,
+    refetch: fetchData,
+    cancel: handleCancel,
+  };
 }

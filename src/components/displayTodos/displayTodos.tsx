@@ -1,23 +1,21 @@
-import { useFetch } from "../hooks/useFetch";
-import styles from "./styles.module.css";
+import { useFetch } from "@/hooks/useFetch";
+import styles from "@/components/displayTodos/styles.module.css";
 
 function DisplayTodos() {
   const { data, isLoading, error, refetch, cancel } = useFetch({
-    url: "https://dummyjson.com/todos",
+    url: "/todos",
     isAutoFetch: true,
     axiosOptions: {
       timeout: 30000,
     },
-    transformResponse: (dataResponse) => {
+    transformer: (dataResponse) => {
       const todos = [...dataResponse.data.todos];
       const response = todos?.map((item) => ({
-        ...item,
         todo: item.todo + " transformed",
       }));
 
       return {
-        ...dataResponse,
-        data: { ...dataResponse.data, todos: response },
+        todos: response,
       };
     },
     onSuccess: () => {
