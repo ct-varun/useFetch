@@ -6,6 +6,7 @@ type props = {
   url: string;
   isAutoFetch: boolean;
   axiosOptions?: AxiosRequestConfig;
+  transformResponse: (dataResponse: any) => any;
   onSuccess?: () => void;
   onError?: () => void;
 };
@@ -14,24 +15,42 @@ export function useFetch({
   url,
   isAutoFetch = true,
   axiosOptions = {},
+  transformResponse,
   onSuccess,
   onError,
 }: props) {
-  const [data, setData] = useState<any>();
+  const [data, setData] = useState<any>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+
+  const api = axios.create();
+
+  api.interceptors.response.use(
+    (response: any) => {
+      const transformedData = transformResponse(response);
+      return transformedData;
+    },
+    (error) => {
+      return Promise.reject(error);
+    }
+  );
 
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get(url, {
+      setError("");
+      const response = await api.get(url, {
         ...axiosOptions,
       });
-      setData(response.data.todos);
+      setData(response?.data?.todos);
 
       onSuccess?.();
     } catch (error: any) {
-      setError(error.message);
+      if (error?.response?.data?.message) {
+        setError(error?.response?.data?.message);
+      } else {
+        setError(error.message);
+      }
       onError?.();
     } finally {
       setIsLoading(false);
