@@ -25,6 +25,7 @@ export function useFetch({
     isAutoFetch ? true : false
   );
   const [error, setError] = useState<string>("");
+  const [debouncedLoader, setDebouncedLoader] = useState<boolean>(false);
   const controllerRef = useRef(null);
 
   const fetchData = async () => {
