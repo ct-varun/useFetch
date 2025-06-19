@@ -84,7 +84,12 @@ export function useFetch({
       fetchData();
     }
 
-    return () => controllerRef.current?.abort();
+    return () => {
+      controllerRef.current?.abort();
+      if (timeoutRef.current) {
+        clearInterval(timeoutRef.current);
+      }
+    };
   }, [isAutoFetch]);
 
   return {
